@@ -1,5 +1,6 @@
 import collections
 import itertools
+import functools
 
 """Evaluate a poker hand.
 
@@ -150,7 +151,7 @@ all_ranks = RANK_NAME_TO_RANK.keys()
 all_suits = SUIT_NAME_TO_NUMBER.keys()
 
 
-
+@functools.total_ordering
 class Card(object):
     """Playing card."""
 
@@ -210,22 +211,15 @@ class Card(object):
     def __lt__(self, other):
         return (self.rank, self.suit) < (other.rank, other.suit)
 
-    def __gt__(self, other):
-        return (self.rank, self.suit) > (other.rank, other.suit)
-
-    def __le__(self, other):
-        return self == other or self < other
-
-    def __ge__(self, other):
-        return self == other or self > other
-
     def __hash__(self):
         return hash(self.name)
 
 card_tuple_generator = itertools.product(all_ranks, all_suits)
 all_cards = map(lambda pair: Card(''.join(pair)), card_tuple_generator)
-print all_cards
+all_cards.sort()
 
+
+@functools.total_ordering
 class Hand(object):
     """Hand of poker cards."""
 
@@ -350,19 +344,6 @@ class Hand(object):
 
         return ("high card", determining)
 
-
-
-        # if suits aren't all the same, remove straight flush, flush
-            # if no consecutive values:
-
-
-            # else:
-        # if adjacent, same values:
-            # could be pair (2), two pair(2 of 2), three of a kind(3), full house 
-                # (3 & 2), and four of a kind (4)
-
-
-
     def __eq__(self, other):
         """Are these two hands equal?
 
@@ -373,18 +354,6 @@ class Hand(object):
             True
         """
         return sorted(self.cards) == sorted(other.cards)
-
-    def __ne__(self, other):
-        """Are these two hands not equal?
-
-            >>> h1 = Hand("2d 3d 4d 5d 6d")
-            >>> h2 = Hand("6d 5d 4d 3d 2d")
-
-            >>> h1 != h2
-            False
-        """
-
-        return sorted(self.cards) != sorted(other.cards)
 
     def __lt__(self, other):
         """Is this hand lower-ranked than the other hand?
@@ -399,31 +368,12 @@ class Hand(object):
         if self.hierarchy[self.eval()[0]] < self.hierarchy[other.eval()[0]]:
             return True
         elif self.hierarchy[self.eval()[0]] == self.hierarchy[other.eval()[0]]:
-            if self.eval()[1] < other.eval()[1]:
-                return True
+
+            self.determining_card = max([card for card in self.cards if card.rank == self.eval()[1]])
+            other.determining_card = max([card for card in other.cards if card.rank == other.eval()[1]])
+            return self.determining_card < other.determining_card
         else:
             return False
-            
-
-    def __le__(self, other):
-        """Is this hand lower-ranked than the other hand?
-
-            >>> h1 = Hand("2d 3d 4d 5d 6d")
-            >>> h2 = Hand("3d 4d 5d 6d 7d")
-
-            >>> h1 <= h2
-            True
-        """
-
-        return self.eval() <= other.eval()
-
-
-# class StraightFlush(Hand):
-
-
-
-
-
 
 if __name__ == '__main__':
     import doctest

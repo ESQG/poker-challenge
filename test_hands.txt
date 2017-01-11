@@ -7,6 +7,7 @@ test_hands = map (Hand,
 "7s 2s 3d 4h 6h",
 "As 2s 3d 4h 5h",
 "3s 3h 3c 3d Ks",
-"5d 8d 10d Jd 3d"
+"5d 8d 10d Jd 3d",
+"Kc Qc 10c Jc Ac",
 ]
 )
