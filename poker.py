@@ -1,4 +1,5 @@
 import collections
+import itertools
 
 """Evaluate a poker hand.
 
@@ -119,6 +120,9 @@ Overall::
 
 """
 
+
+
+
 RANK_NAME_TO_RANK = {
     "2": 2,
     "3": 3,
@@ -132,8 +136,19 @@ RANK_NAME_TO_RANK = {
     "J": 11,
     "Q": 12,
     "K": 13,
-    "A": 14, #1
+    "A": 14,   # remember the 1 case
 }
+
+SUIT_NAME_TO_NUMBER = {
+    'c': 100,
+    'd': 200,
+    'h': 300,
+    's': 400,
+    }
+
+all_ranks = RANK_NAME_TO_RANK.keys()
+all_suits = SUIT_NAME_TO_NUMBER.keys()
+
 
 
 class Card(object):
@@ -171,12 +186,13 @@ class Card(object):
         suit = name[-1]
 
         assert rank in RANK_NAME_TO_RANK, "Bad rank: %s" % name
-        assert suit in "hdcs", "Bad suit: %s" % name
+        assert suit in SUIT_NAME_TO_NUMBER, "Bad suit: %s" % name
         # assert len(s)
 
         self.name = name
         self.rank = RANK_NAME_TO_RANK.get(rank)
         self.suit = suit
+        self.suit_number = SUIT_NAME_TO_NUMBER.get(suit)
 
     def __str__(self):
         """Public print representation of a card."""
@@ -191,9 +207,24 @@ class Card(object):
     def __eq__(self, other):
         return self.rank == other.rank and self.suit == other.suit
 
+    def __lt__(self, other):
+        return (self.rank, self.suit) < (other.rank, other.suit)
+
+    def __gt__(self, other):
+        return (self.rank, self.suit) > (other.rank, other.suit)
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __ge__(self, other):
+        return self == other or self > other
+
     def __hash__(self):
         return hash(self.name)
 
+card_tuple_generator = itertools.product(all_ranks, all_suits)
+all_cards = map(lambda pair: Card(''.join(pair)), card_tuple_generator)
+print all_cards
 
 class Hand(object):
     """Hand of poker cards."""
@@ -276,7 +307,7 @@ class Hand(object):
 
         if len(suits) == 1:
             flush_status = True
-        else: 
+        else:
             flush_status = False
 
         if self.is_consecutive():
@@ -341,8 +372,7 @@ class Hand(object):
             >>> h1 == h2
             True
         """
-
-        return self.eval() == other.eval()
+        return sorted(self.cards) == sorted(other.cards)
 
     def __ne__(self, other):
         """Are these two hands not equal?
@@ -354,7 +384,7 @@ class Hand(object):
             False
         """
 
-        return self.eval() != other.eval()
+        return sorted(self.cards) != sorted(other.cards)
 
     def __lt__(self, other):
         """Is this hand lower-ranked than the other hand?
@@ -366,11 +396,14 @@ class Hand(object):
             True
         """
 
-        if hierarchy[self.eval()] < hierarchy[other.eval()]:
+        if self.hierarchy[self.eval()[0]] < self.hierarchy[other.eval()[0]]:
             return True
+        elif self.hierarchy[self.eval()[0]] == self.hierarchy[other.eval()[0]]:
+            if self.eval()[1] < other.eval()[1]:
+                return True
         else:
-            if self.eval():
-                pass
+            return False
+            
 
     def __le__(self, other):
         """Is this hand lower-ranked than the other hand?
