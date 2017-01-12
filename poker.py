@@ -1,6 +1,8 @@
 import collections
 import itertools
 import functools
+import random
+import sys
 
 """Evaluate a poker hand.
 
@@ -120,8 +122,6 @@ Overall::
     True
 
 """
-
-
 
 
 RANK_NAME_TO_RANK = {
@@ -260,7 +260,7 @@ class Hand(object):
             cards = cards.split()
 
         self.cards = [c if type(c) is Card else Card(c) for c in cards]
-            
+
         assert len(self.cards) == 5, "Hands must have 5 cards."
         assert len(set(self.cards)) == 5, "Cards in hand must be distinct!"
 
@@ -286,16 +286,17 @@ class Hand(object):
         if rank_list == range(rank_list[0], rank_list[-1]+1):
             return True
         elif rank_list == [2, 3, 4, 5, 14]:
+            for card in self.cards:
+                if card.rank == 14:     # Reset Ace to low for a low straight!
+                    card.rank = 1
             return True
         else:
             return False
 
-
     def eval(self):
         """Evaluate the value of a hand."""
 
-        sorted_hand = sorted(self.cards,
-                      key=lambda c: (14 - c.rank, -ord(c.suit)))
+        sorted_hand = sorted(self.cards, key=lambda card: (14 - card.rank, - card.suit_number))
 
         suits = {card.suit for card in sorted_hand}
 
@@ -317,9 +318,8 @@ class Hand(object):
         # print sorted_by_counts
         determining = sorted_by_counts[0][0]
 
-
         if straight_status and flush_status:
-            return ("straight flush", determining) # Fix to compare cards later
+            return ("straight flush", determining)
 
         if 4 in counts.values():
             return ("four of a kind", determining)
@@ -375,8 +375,34 @@ class Hand(object):
         else:
             return False
 
-if __name__ == '__main__':
-    import doctest
 
-    if doctest.testmod().failed == 0:
-        print "\n*** ALL TESTS PASSED; WE CAN BET ON YOU!\n"
+def generate_hands(num_hands):
+    assert 1 <= num_hands <= 10 # Uses a 52-card deck
+
+    hands = []
+
+    random.shuffle(all_cards)
+    for i in range(num_hands):
+        hands.append(Hand(all_cards[5*i: 5*i + 5]))
+
+    all_cards.sort()
+    return hands
+
+
+def game(total_hand_list):
+    winning_hand = sorted(total_hand_list)[-1]
+    for hand in total_hand_list:
+        print hand, hand.eval()
+    return "And the winning hand is....{}!!".format(winning_hand)
+
+
+players = int(sys.argv[1])
+print game(generate_hands(players))
+
+
+
+# if __name__ == '__main__':
+    # import doctest
+
+    # if doctest.testmod().failed == 0:
+    #     print "\n*** ALL TESTS PASSED; WE CAN BET ON YOU!\n"
